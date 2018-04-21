@@ -1,7 +1,7 @@
 # Extended Kalman Filter Project Starter Code
 Self-Driving Car Engineer Nanodegree Program
 
-In this project you will utilize a kalman filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. Passing the project requires obtaining RMSE values that are lower than the tolerance outlined in the project rubric. 
+In this project, a kalman filter is utilized to estimate the state of a moving object of interest with noisy LIDAR and Radar measurements. The objective of this project requires obtaining RMSE values that are lower than the tolerance outlined in the project rubric. 
 
 This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
 
@@ -17,12 +17,7 @@ Once the install for uWebSocketIO is complete, the main program can be built and
 
 Tips for setting up your environment can be found [here](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/23d376c7-0195-4276-bdf0-e02f1f3c665d)
 
-Note that the programs that need to be written to accomplish the project are src/FusionEKF.cpp, src/FusionEKF.h, kalman_filter.cpp, kalman_filter.h, tools.cpp, and tools.h
-
-The program main.cpp has already been filled out, but feel free to modify it.
-
 Here is the main protcol that main.cpp uses for uWebSocketIO in communicating with the simulator.
-
 
 INPUT: values provided by the simulator to the c++ program
 
@@ -55,16 +50,14 @@ OUTPUT: values provided by the c++ program to the simulator
 
 ## Basic Build Instructions
 
-1. Clone this repo.
-2. Make a build directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make` 
-   * On windows, you may need to run: `cmake .. -G "Unix Makefiles" && make`
-4. Run it: `./ExtendedKF `
+1. Make a build directory: `mkdir build && cd build`
+2. Compile: `cmake .. && make` 
+3. Run it: `./ExtendedKF `
 
 ## Editor Settings
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
+Editor configuration files were purposfully kept out of this repo in order to
+keep it as simple and environment agnostic as possible. However, it is recommended
 using the following settings:
 
 * indent using spaces
@@ -91,39 +84,49 @@ More information is only accessible by people who are already enrolled in Term 2
 of CarND. If you are enrolled, see [the project resources page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/382ebfd6-1d55-4487-84a5-b6a5a4ba1e47)
 for instructions and the project rubric.
 
-## Hints and Tips!
+[//]: # (Image References)
 
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
-* Students have reported rapid expansion of log files when using the term 2 simulator.  This appears to be associated with not being connected to uWebSockets.  If this does occur,  please make sure you are conneted to uWebSockets. The following workaround may also be effective at preventing large log files.
+[final_result1]: ./report_images/Final_Result_Dataset1.png "final_result1"
+[final_result2]: ./report_images/Final_Result_Dataset2.png "final_result2"
+[lidar_only]: ./report_images/LIDAR_only_result.png "lidar_only"
+[radar_only]: ./report_images/Radar_only_result.png "radar_only"
 
-    + create an empty log file
-    + remove write permissions so that the simulator can't write to log
- * Please note that the ```Eigen``` library does not initialize ```VectorXd``` or ```MatrixXd``` objects with zeros upon creation.
+# Project Report
+## Raw Measurement Data Handling
+It was found that some of phi raw measurement was out of desired range from -pi to pi. Thus, in `UpdateEKF` function in `kalman_filter.cpp` file, phi raw measurement data always get monitored and predicted phi values get added or subtracted by `2*pi`.
 
-## Call for IDE Profiles Pull Requests
+Moreover, it was also observed that, when a vehicle crossed between second and third quadrant, vehicle estimated positions significantly deviated from the ground truth values, and RMSE value spiked. This was because the negative side of the x-axis is the transition line where an angle value sign changes between negative and postiive. For example, lets say phi_raw = -3.00 rad (third quadrant) and phi_predicted = 3.00 rad (second quadrant). Their difference is only around 0.28 rad, but if they are input to the error equation,'y = z - z_predicted' then, error_phi becomes 6. Therefore, a few lines of code was added to check whether the signs of phi raw measurement and predicted phi are different and add or subtract `2*pi` to the predicted phi to match the sign.
 
-Help your fellow students!
+## Improve RMSE value
+While initial x-position and y-position values were estimated by the first raw measurement values, initial x-velocity and y-velocity values
+were absent. 
+They were approximated by simply running the simulator with datatset1 and got the x-velocity and y-velocity values at very first few data points. 
 
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to ensure
-that students don't feel pressured to use one IDE or another.
+Initial State Covariance matrix was approximated by trying large diagonal values and small diagonal values. And, it was found that small diagonal values yielded the better result.
 
-However! We'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
+## Sensor fusion VS. Single Sensor Type
+`ExtendedKF` was modified to compare its performance by LIDAR only and by Radar only. To turn off a sensor, one of `Update` function was commented out.
 
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
+1. LIDAR Sensor Only
+Since LIDAR raw measurement provided the direct measurement values of px and py, RMSE values of px, py, vx, and vy were little higher than the acceptance criteria.
 
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
+![LIDAR Only Result][lidar_only]
 
-Regardless of the IDE used, every submitted project must
-still be compilable with cmake and make.
+2. Radar Sensor Only
+RMSE values of px, py, vx, and vy produced by `Radar-Only ExtendedKF` were much higher than the acceptance criteria. This was because of the nonlinear mapping from the Radar raw measurements value to the system state vectors. First order Taylor Series Expansion was used to linearize the nonlinearity of the measurement vector, and this was where significant gaps created. As it is shown in the picture below, the estimated points are noticeably off from the measurement points, especially at the curved path.
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+![Radar Only Result][radar_only]
 
+## Final Result
+
+`ExtendedKF` has been run against Dataset1 and RMSE values were as follow:
+[px, py, vx, vy] ~ [0.09, 0.08, 0.30, 0.39]
+
+![Final Result 1][final_result1]
+
+For Dataset2, the initial value for vx was changed to -5 as the vehicle started toward the opposite direction to the Datatet1, and RMSE values were as follow:
+[px, py, vx, vy] ~ [0.07, 0.09, 0.30, 0.42]
+
+![Final Result 2][final_result2]
+
+`ExtendedKF` with the sensor fusion algorithm, combining both LIDAR and Radar measurements, resulted much better performance than the one relied on a single sensor measurement. 
