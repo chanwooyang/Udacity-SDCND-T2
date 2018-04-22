@@ -53,15 +53,10 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 	float vy = x_state(3);
 
 	// Create substitutes
-	float denom1 = px*px + py*py;
-	float denom2 = sqrt(denom1);
-	float denom3 = denom1*denom2;
-
-	// Check division by zero
-	if (fabs(denom1) < 0.0001){
-		cout << "computeJacobian() - Error - Division by Zero" << endl;
-		return Hj;
-	}
+	const float eps = 0.0001;
+	const float denom1 = max(eps, px*px + py*py);	// Check the division by zero
+	const float denom2 = sqrt(denom1);
+	const float denom3 = denom1*denom2;
 
 	// Compute Jacobian Matrix
 	Hj << (px/denom2), (py/denom2), 0, 0,
