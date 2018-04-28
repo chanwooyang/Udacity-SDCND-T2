@@ -12,6 +12,8 @@ using std::vector;
  * This is scaffolding, do not modify
  */
 UKF::UKF() {
+  is_initialized_ = false;
+
   // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = true;
 
@@ -54,6 +56,18 @@ UKF::UKF() {
 
   Hint: one or more values initialized above might be wildly off...
   */
+
+  // Initialize State dimension
+  n_x_ = 5;
+
+  // Initialize Augmented state dimension
+  n_aug_ = 7;
+
+  // Initialize Sigma point spreading parameter
+  lambda_ = 3 - n_x_;
+
+  // Initialize Weights of sigma points dimension
+  weights_ = VectorXd(2*n_aug_+1);
 }
 
 UKF::~UKF() {}
