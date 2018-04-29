@@ -250,4 +250,68 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
   You'll also need to calculate the radar NIS.
   */
+  // Initialize Radar Measurement Dimension: [rho, phi, rho_d]
+  int n_z = 3;
+
+
+  // Predict Radar Measurement based on predicted Xsig: z_k+1|k = h(x_k+1|k) + w_k+1
+  VectorXd z_pred = VectorXd(n_z);
+  MatrixXd Zsig_pred = MatrixXd(n_z,2*n_aug_+1);
+
+  for (int i=0;i<2*n_aug_+1;i++){
+    VectorXd Xsig_pred_col = Xsig_pred_.col(i);
+    float px = Xsig_pred_col(0);
+    float py = Xsig_pred_col(1);
+    float v = Xsig_pred_col(2);
+    float psi = Xsig_pred_col(3);
+    float psi_d = Xsig_pred_col(4);
+
+    //Radar Measurement Model
+    float rho = sqrt(px*px + py*py);
+    float phi = atan2(py,px);
+    float rho_d = (px*cos(psi)*v + py*sin(psi)*v)/sqrt(px*px + py*py);
+
+    Zsig_pred.col(i) << rho, phi, rho_d;
+  }
+
+  for (int i=0;i<2*n_aug_+1;i++){
+    z_pred += weights_(i)*Zsig_pred.col(i);
+  }
+
+  // Predict Innovation Covariance Matrix
+  MatrixXd S = MatrixXd(n_z,n_z);
+  MatrixXd R = MatrixXd(n_z,n_z);
+
+  R.fill(0.0);
+  R(0,0) = std_radr_*std_radr_;
+  R(1,1) = std_radphi_*std_radphi_;
+  R(2,2) = std_radrd_*std_radrd_;
+
+  for (int i=0;i<2*n_aug_+1;i++){
+    VectorXd pred_error = Zsig_pred.col(i) - z_pred;
+    S += weights_(i)*pred_error*pred_error.transpose();
+  }
+  S += R;
+
+  // UKF Update: State Vector, Covariance
+
+  // Cross-correlation Matrix
+  MatrixXd Tc = MatrixXd(n_x_,n_z)
+  for (int i=0;i<2*n_aug_+1;i++){
+    VectorXd state_pred_error = Xsig_pred_.col(i) - x_;
+    VectorXd meas_pred_error = Zsig_pred.col(i) - z_pred;
+
+    Tc += weights_(i)*state_pred_error*meas_pred_error.transpose();
+  }
+
+  // Kalman Gain
+  MatrixXd K = Tc * S.inverse();
+
+  // Update State Vector
+  VectorXd z = meas_package.raw_measurements_;
+  x_ += K*(z - z_pred);
+
+  // Update Covariance Matrix
+  P_ += -K*S*K.transpose();
+
 }
