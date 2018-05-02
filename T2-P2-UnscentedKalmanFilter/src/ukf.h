@@ -11,6 +11,10 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 class UKF {
+private:
+  ///* Normalize angle function
+  void NormalizeAngle(double& angle);
+
 public:
 
   ///* initially set to false, set to true in first call of ProcessMeasurement
