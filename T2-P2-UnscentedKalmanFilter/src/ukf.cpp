@@ -41,11 +41,11 @@ UKF::UKF() {
 
   // Need to be tuned
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 2;
+  std_a_ = 0.5;
 
   // Need to be tuned
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = M_PI*1.5;
+  std_yawdd_ = M_PI*(0.5);
   
   //DO NOT MODIFY measurement noise values below; these are provided by the sensor manufacturer.
   // Laser measurement noise standard deviation position1 in m
@@ -95,11 +95,11 @@ void UKF::ProcessMeasurement(const MeasurementPackage meas_package) {
     time_us_ = meas_package.timestamp_;
 
     // Initialize Covariance Matrices
-    P_ << 1, 0, 0, 0, 0,
-          0, 1, 0, 0, 0,
-          0, 0, 1, 0, 0,
-          0, 0, 0, 1, 0,
-          0, 0, 0, 0, 1;
+    P_ << 0.1, 0, 0, 0, 0,
+          0, 0.1, 0, 0, 0,
+          0, 0, 0.1, 0, 0,
+          0, 0, 0, 0.1, 0,
+          0, 0, 0, 0, 0.1;
 
     // Compute weights_ vector for  Mean & Covariance prediction
     weights_(0) = lambda_/(lambda_+n_aug_);
@@ -117,14 +117,14 @@ void UKF::ProcessMeasurement(const MeasurementPackage meas_package) {
       double px = rho * cos(phi);
       double py = rho * sin(phi);
 
-      x_ << px, py, 1, 1, 1;
+      x_ << px, py, 5, 0, 0;
 
     } else if (meas_package.sensor_type_ == MeasurementPackage::LASER){
       // Initialize state
       double px = meas_package.raw_measurements_[0];
       double py = meas_package.raw_measurements_[1];
 
-      x_ << px, py, 1, 1, 1;
+      x_ << px, py, 5, 0, 0;
 
     }
   // Initialization complete
