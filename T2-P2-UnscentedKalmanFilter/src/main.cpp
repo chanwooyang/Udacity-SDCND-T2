@@ -26,7 +26,7 @@ std::string hasData(std::string s) {
   return "";
 }
 
-int main()
+int main(int argc, char* argv[])
 {
   uWS::Hub h;
 
@@ -38,7 +38,25 @@ int main()
   vector<VectorXd> estimations;
   vector<VectorXd> ground_truth;
 
-  h.onMessage([&ukf,&tools,&estimations,&ground_truth](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  // Create a .csv file to write estimation and ground_truth data
+  ofstream outfile;
+  if (argc > 1){
+    outfile.open(argv[1], ofstream::out);
+    outfile << "px_true" << ",";
+    outfile << "py_true" << ",";
+    outfile << "vx_true" << ",";
+    outfile << "vy_true" << ",";
+    outfile << "yaw_true" << ",";
+    outfile << "px_estimate" << ",";
+    outfile << "py_estimate" << ",";
+    outfile << "vx_estimate" << ",";
+    outfile << "vy_estimate" << ",";
+    outfile << "yaw_estimate" << ",";
+    outfile << "Sensor Type" << ",";
+    outfile << "NIS" << endl;
+  }
+
+  h.onMessage([&ukf,&tools,&estimations,&ground_truth,&outfile](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -90,7 +108,7 @@ int main()
           		iss >> timestamp;
           		meas_package.timestamp_ = timestamp;
           }
-          float x_gt;
+        float x_gt;
     	  float y_gt;
     	  float vx_gt;
     	  float vy_gt;
@@ -98,6 +116,10 @@ int main()
     	  iss >> y_gt;
     	  iss >> vx_gt;
     	  iss >> vy_gt;
+
+        // Calculated Ground Truth Yaw Angle
+        float yaw_gt = atan2(vy_gt,vx_gt);
+
     	  VectorXd gt_values(4);
     	  gt_values(0) = x_gt;
     	  gt_values(1) = y_gt; 
@@ -125,6 +147,25 @@ int main()
     	  estimate(2) = v1;
     	  estimate(3) = v2;
     	  
+        // if writing to output file is enabled, write output after a filter update
+        if (outfile.is_open()){
+          outfile << fixed << setprecision(4) << x_gt << ",";
+          outfile << fixed << setprecision(4) << y_gt << ",";
+          outfile << fixed << setprecision(4) << vx_gt << ",";
+          outfile << fixed << setprecision(4) << vy_gt << ",";
+          outfile << fixed << setprecision(4) << yaw_gt << ",";
+          outfile << fixed << setprecision(4) << p_x << ",";
+          outfile << fixed << setprecision(4) << p_y << ",";
+          outfile << fixed << setprecision(4) << v1 << ",";
+          outfile << fixed << setprecision(4) << v2 << ",";
+          outfile << fixed << setprecision(4) << yaw << ",";
+          outfile << sensor_type << ",";
+          double nis;
+          if (sensor_type.compare("L") == 0) nis = ukf.nis_laser_;
+          else if (sensor_type.compare("R") == 0) nis = ukf.nis_radar_;
+          outfile << fixed << setprecision(4) << nis << endl;
+        }
+
     	  estimations.push_back(estimate);
 
     	  VectorXd RMSE = tools.CalculateRMSE(estimations, ground_truth);
@@ -185,6 +226,10 @@ int main()
     return -1;
   }
   h.run();
+
+  if (outfile.is_open()){
+    outfile.close();
+  }
 }
 
 

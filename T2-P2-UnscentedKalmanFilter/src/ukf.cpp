@@ -333,9 +333,10 @@ void UKF::UpdateLidar(const MeasurementPackage meas_package) {
 
   //Normalized Innovation Squared (NIS)
   VectorXd meas_error = z - z_pred;
-  double eps = meas_error.transpose()*S.inverse()*meas_error;
+  nis_laser_ = meas_error.transpose()*S.inverse()*meas_error;
 
-  cout << "LIDAR::NIS = " << eps << endl;
+  // // Debugging purpose
+  // cout << "LIDAR::NIS = " << nis_laser_ << endl;
 }
 
 /**
@@ -432,7 +433,8 @@ void UKF::UpdateRadar(const MeasurementPackage meas_package) {
 
   //Normalized Innovation Squared (NIS)
   VectorXd meas_error = z - z_pred;
-  double eps = meas_error.transpose()*S.inverse()*meas_error;
+  nis_radar_ = meas_error.transpose()*S.inverse()*meas_error;
 
-  cout << "Radar::NIS = " << eps << endl;
+  // // Debugging purpose
+  // cout << "RADAR::NIS = " << nis_radar_ << endl;
 }
