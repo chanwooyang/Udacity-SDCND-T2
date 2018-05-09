@@ -97,6 +97,10 @@ The longitudinal and yaw acceleration standard deviation values were fine-tuned 
 
 Finally, the longitudinal acceleration and yaw acceleration standard deviations were chosen as follow:
 
+`std_a_ = 0.5 [m/s^2]`
+
+`std_yawdd_ = 0.5*PI`
+
 And, Radar and LIDAR NIS plots were made as follows:
 
 ### NIS: Radar Measurement
