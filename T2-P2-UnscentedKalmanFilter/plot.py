@@ -38,7 +38,7 @@ plt.legend()
 plt.show()
 
 plt.plot(L_NIS,label='NIS_Laser')
-plt.plot(np.ones(len(L_NIS))*7.815,label='95% Line')
+plt.plot(np.ones(len(L_NIS))*5.991,label='95% Line')
 plt.ylabel('NIS')
 plt.xlabel('Frame Index')
 plt.grid()
