@@ -4,15 +4,16 @@
  */
 #include "particle_filter.h"
 
-
 // random generator engine
-default_random_engine gen(time(0));
+default_random_engine gen;
 
 double ParticleFilter::_Bivariate_Gaussian(double mu_x, double mu_y, double sigma_x, double sigma_y, double x, double y){
 
 	double gauss_norm = 1.0/(2.0*M_PI*sigma_x*sigma_y);
 	double exponent = (x - mu_x)*(x - mu_x)/(2.0*sigma_x*sigma_x) + (y - mu_y)*(y - mu_y)/(2.0*sigma_y*sigma_y);
 
+	// // Debugging Purpose
+	// cout <<gauss_norm*exp(-exponent)<<endl;
 	return gauss_norm*exp(-exponent);
 }
 
@@ -24,7 +25,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
 	// Set the number of particles
-	num_particles = 200;
+	num_particles = 100;
 
 	// Resize weights vector
 	weights.resize(num_particles);
@@ -120,6 +121,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
 	const double sigma_landmark_x = std_landmark[0];
 	const double sigma_landmark_y = std_landmark[1];
+	const double TOL = numeric_limits<double>::min();
 
 	for (unsigned int i=0;i<num_particles;i++){
 		
@@ -148,11 +150,16 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		this -> dataAssociation(predicted_landmarks, transf_obs);
 
 		particles[i].weight = 1.0;
-
+		double gaussian_value = 0.0;
 		for (unsigned int j=0;j<transf_obs.size();j++){
 			for (unsigned int k=0;k<predicted_landmarks.size();k++){
 				if(predicted_landmarks[k].id == transf_obs[j].id){
-					particles[i].weight *= this -> _Bivariate_Gaussian(transf_obs[j].x, transf_obs[j].y, sigma_landmark_x, sigma_landmark_y, predicted_landmarks[k].x, predicted_landmarks[k].y);
+					gaussian_value = this -> _Bivariate_Gaussian(transf_obs[j].x, transf_obs[j].y, sigma_landmark_x, sigma_landmark_y, predicted_landmarks[k].x, predicted_landmarks[k].y);
+					if(gaussian_value == 0.0){
+						particles[i].weight *= TOL;
+					} else {
+						particles[i].weight *= gaussian_value;
+					}
 				}
 			}
 		}
@@ -207,6 +214,8 @@ Particle ParticleFilter::SetAssociations(Particle& particle, const std::vector<i
     particle.associations= associations;
     particle.sense_x = sense_x;
     particle.sense_y = sense_y;
+
+    return particle;
 }
 
 string ParticleFilter::getAssociations(Particle best)
