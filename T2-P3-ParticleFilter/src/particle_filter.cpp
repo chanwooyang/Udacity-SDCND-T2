@@ -29,15 +29,13 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 
 	// Resize weights vector
 	weights.resize(num_particles);
-	// Resize particles vector
-	particles.resize(num_particles);
-
+	
 	// x - Gaussian Distribution
-	std::normal_distribution<double> x_gauss_dist(x,std[0]);
+	normal_distribution<double> x_gauss_dist(x,std[0]);
 	// y - Gaussian Distribution
-	std::normal_distribution<double> y_gauss_dist(y,std[1]);
+	normal_distribution<double> y_gauss_dist(y,std[1]);
 	// theta - Gaussian Distribution
-	std::normal_distribution<double> theta_gauss_dist(theta,std[2]);
+	normal_distribution<double> theta_gauss_dist(theta,std[2]);
 
 	for (unsigned int i=0;i<num_particles;i++){
 		Particle particle;
@@ -55,22 +53,26 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 void ParticleFilter::prediction(double dt, double std_pos[], double velocity, double yaw_rate) {
 	// Add measurements to each particle and add random Gaussian noise.
 
+
 	for (unsigned int i=0;i<num_particles;i++){
 
-		double x_o = particles[i].x;
-		double y_o = particles[i].y;
 		double theta_o = particles[i].theta;
 
-		double x_f = x_o + (velocity/yaw_rate)*(sin(theta_o + yaw_rate*dt) - sin(theta_o)); 
-		double y_f = y_o + (velocity/yaw_rate)*(cos(theta_o) - cos(theta_o + yaw_rate*dt));
-		double theta_f = theta_o + yaw_rate*dt;
+		if (fabs(yaw_rate) < 0.00001){
+			particles[i].x += velocity * dt * cos(theta_o);
+			particles[i].y += velocity * dt * sin(theta_o);
+		} else {
+			particles[i].x += (velocity/yaw_rate)*(sin(theta_o + yaw_rate*dt) - sin(theta_o)); 
+			particles[i].y += (velocity/yaw_rate)*(cos(theta_o) - cos(theta_o + yaw_rate*dt));
+		}
+		particles[i].theta = theta_o + yaw_rate*dt;
 
 		// x - Gaussian Distribution
-		std::normal_distribution<double> x_gauss_dist(x_f,std_pos[0]);
+		normal_distribution<double> x_gauss_dist(particles[i].x,std_pos[0]);
 		// y - Gaussian Distribution
-		std::normal_distribution<double> y_gauss_dist(y_f,std_pos[1]);
+		normal_distribution<double> y_gauss_dist(particles[i].y,std_pos[1]);
 		// theta - Gaussian Distribution
-		std::normal_distribution<double> theta_gauss_dist(theta_f,std_pos[2]);
+		normal_distribution<double> theta_gauss_dist(particles[i].theta,std_pos[2]);
 
 		particles[i].x = x_gauss_dist(gen);
 		particles[i].y = y_gauss_dist(gen);
@@ -119,8 +121,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
 
-	const double sigma_landmark_x = std_landmark[0];
-	const double sigma_landmark_y = std_landmark[1];
+	double sigma_landmark_x = std_landmark[0];
+	double sigma_landmark_y = std_landmark[1];
 	const double TOL = numeric_limits<double>::min();
 
 	for (unsigned int i=0;i<num_particles;i++){
