@@ -107,4 +107,4 @@ Timestep (N) and Timestep Duration (dt) define the prediction horizon. Having th
 Generally, Electronic Cotroller Unit (ECU) of a vehicle has 10 ms or 100 ms update rate, so this latency needed to be taken account. Thus, using the same vehicle kinematic model as the update equation and the step delay as 0.1 sec, state after 100 ms from the current state was predicted. These predicted state values were, then, fed into the MPC model.
 
 ### Simulation
-The vehicle in the simulator successfly drove around the track with its maximum speed at around 97MPH. The simulation run video can be found in this [link](https://drive.google.com/file/d/1lF83TXTy4CPkRwh4MWQcwFsDU-jyglWf/view?usp=sharing).
+The vehicle in the simulator successfully drove around the track with its maximum speed at around 97MPH. The simulation run video can be found in this [link](https://drive.google.com/file/d/1lF83TXTy4CPkRwh4MWQcwFsDU-jyglWf/view?usp=sharing).
