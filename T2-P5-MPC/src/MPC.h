@@ -2,6 +2,7 @@
 #define MPC_H
 
 #include <vector>
+#include <math.h>
 #include "Eigen-3.3/Eigen/Core"
 
 using namespace std;

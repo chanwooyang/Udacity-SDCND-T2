@@ -775,6 +775,8 @@ lapacke_mangling.h
 /home/chanwoo/Documents/DL_Project/SDCND/Term2/T2-P5-MPC/src/MPC.cpp
 MPC.h
 /home/chanwoo/Documents/DL_Project/SDCND/Term2/T2-P5-MPC/src/MPC.h
+float.h
+-
 cppad/cppad.hpp
 -
 cppad/ipopt/solve.hpp
@@ -784,6 +786,8 @@ Eigen-3.3/Eigen/Core
 
 /home/chanwoo/Documents/DL_Project/SDCND/Term2/T2-P5-MPC/src/MPC.h
 vector
+-
+math.h
 -
 Eigen-3.3/Eigen/Core
 /home/chanwoo/Documents/DL_Project/SDCND/Term2/T2-P5-MPC/src/Eigen-3.3/Eigen/Core
